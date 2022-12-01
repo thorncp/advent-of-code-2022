@@ -1,31 +1,21 @@
 class CountCalories
   def self.call(input)
-    elf = 1
-    elves = Hash.new(0)
-
-    input.each_line do |line|
-      line.strip!
-
-      if line.empty?
-        elf += 1
-      else
-        elves[elf] += Integer(line)
-      end
-    end
-
-    elves
+    input
+      .lines(chomp: true)
+      .slice_when { |l| l.empty? }
+      .map { |s| s.map(&:to_i).sum }
   end
 end
 
 class FindMax
   def self.call(input)
-    input.values.max
+    input.max
   end
 end
 
 class FindTopThree
   def self.call(input)
-    input.values.sort.last(3).sum
+    input.sort.last(3).sum
   end
 end
 
@@ -57,25 +47,25 @@ else
 
       calories = CountCalories.call(input)
 
-      expect(calories).to eq(
-        1 => 6000,
-        2 => 4000,
-        3 => 11000,
-        4 => 24000,
-        5 => 10000
-      )
+      expect(calories).to eq [
+        6000,
+        4000,
+        11000,
+        24000,
+        10000
+      ]
     end
   end
 
   RSpec.describe FindMax do
     it "returns the maximum value of a hash" do
-      input = {
-        1 => 6000,
-        2 => 4000,
-        3 => 11000,
-        4 => 24000,
-        5 => 10000
-      }
+      input = [
+        6000,
+        4000,
+        11000,
+        24000,
+        10000
+      ]
 
       max = FindMax.call(input)
 
@@ -85,13 +75,13 @@ else
 
   RSpec.describe FindTopThree do
     it "returns the sum of the three highest values" do
-      input = {
-        1 => 6000,
-        2 => 4000,
-        3 => 11000,
-        4 => 24000,
-        5 => 10000
-      }
+      input = [
+        6000,
+        4000,
+        11000,
+        24000,
+        10000
+      ]
 
       max = FindTopThree.call(input)
 
