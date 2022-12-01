@@ -1,9 +1,34 @@
 class CountCalories
+  attr_reader :input
+
   def self.call(input)
-    input
-      .lines(chomp: true)
-      .slice_when { |l| l.empty? }
-      .map { |s| s.map(&:to_i).sum }
+    new(input).call
+  end
+
+  def initialize(input)
+    @input = input
+  end
+
+  def call
+    foods_summed_by_elf
+  end
+
+  private
+
+  def foods_summed_by_elf
+    foods_sliced_by_elf.map do |foods|
+      foods.map(&:to_i).sum
+    end
+  end
+
+  def foods_sliced_by_elf
+    lines.slice_when do |line, _next_line|
+      line.empty?
+    end
+  end
+
+  def lines
+    input.lines(chomp: true)
   end
 end
 
