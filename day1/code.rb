@@ -23,8 +23,16 @@ class FindMax
   end
 end
 
+class FindTopThree
+  def self.call(input)
+    input.values.sort.last(3).sum
+  end
+end
+
 if ARGV.any?
-  puts FindMax.call(CountCalories.call(ARGF.read))
+  calories = CountCalories.call(ARGF.read)
+  puts "Top elf: #{FindMax.call(calories)}"
+  puts "Top three: #{FindTopThree.call(calories)}"
 else
   require "rspec/autorun"
 
@@ -72,6 +80,22 @@ else
       max = FindMax.call(input)
 
       expect(max).to eq 24000
+    end
+  end
+
+  RSpec.describe FindTopThree do
+    it "returns the sum of the three highest values" do
+      input = {
+        1 => 6000,
+        2 => 4000,
+        3 => 11000,
+        4 => 24000,
+        5 => 10000
+      }
+
+      max = FindTopThree.call(input)
+
+      expect(max).to eq 45000
     end
   end
 end
