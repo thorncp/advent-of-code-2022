@@ -48,18 +48,20 @@ class CalculateScore
 end
 
 class ExecuteStrat
+  STRATS = {
+    [:rock, :win] => :paper,
+    [:rock, :lose] => :scissors,
+    [:rock, :draw] => :rock,
+    [:paper, :win] => :scissors,
+    [:paper, :lose] => :rock,
+    [:paper, :draw] => :paper,
+    [:scissors, :win] => :rock,
+    [:scissors, :lose] => :paper,
+    [:scissors, :draw] => :scissors
+  }
+
   def self.call(left:, strat:)
-    case [left, strat]
-    when [:rock, :win] then :paper
-    when [:rock, :lose] then :scissors
-    when [:rock, :draw] then :rock
-    when [:paper, :win] then :scissors
-    when [:paper, :lose] then :rock
-    when [:paper, :draw] then :paper
-    when [:scissors, :win] then :rock
-    when [:scissors, :lose] then :paper
-    when [:scissors, :draw] then :scissors
-    end
+    STRATS.fetch([left, strat])
   end
 end
 
