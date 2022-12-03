@@ -6,7 +6,7 @@ class Rucksack
   end
 
   def compartment_one
-    contents[0...compartment_size].chars
+    items[0...compartment_size]
   end
 
   def compartment_size
@@ -14,7 +14,11 @@ class Rucksack
   end
 
   def compartment_two
-    contents[compartment_size..].chars
+    items[compartment_size..]
+  end
+
+  def items
+    contents.chars
   end
 end
 
@@ -32,18 +36,28 @@ class DeterminePriority
   end
 end
 
-class SumDuplicateItemPriorities
+class FindGroupBadge
+  def self.call(rucksacks)
+    rucksacks
+      .map(&:items)
+      .reduce(&:&)
+      .first
+  end
+end
+
+class SumGroupBadges
   def self.call(input)
     input.each_line
       .map { |l| Rucksack.new(l) }
-      .map { |r| FindDuplicateItem.call(r) }
+      .each_slice(3)
+      .map { |g| FindGroupBadge.call(g) }
       .map { |i| DeterminePriority.call(i) }
       .sum
   end
 end
 
 if ARGV.any?
-  puts SumDuplicateItemPriorities.call(ARGF)
+  puts SumGroupBadges.call(ARGF)
 else
   require "rspec/autorun"
 
@@ -90,7 +104,19 @@ else
     end
   end
 
-  RSpec.describe SumDuplicateItemPriorities do
+  RSpec.describe FindGroupBadge do
+    it "finds the common item of group" do
+      rucksacks = [
+        Rucksack.new("vJrwpWtwJgWrhcsFMMfFFhFp"),
+        Rucksack.new("jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"),
+        Rucksack.new("PmmdzqPrVvPwwTWBwg")
+      ]
+
+      expect(FindGroupBadge.call(rucksacks)).to eq("r")
+    end
+  end
+
+  RSpec.describe SumGroupBadges do
     it "sums the priorities of duplicate items in many rucksacks" do
       input = <<~TXT
         vJrwpWtwJgWrhcsFMMfFFhFp
@@ -101,7 +127,7 @@ else
         CrZsJsPPZsGzwwsLwLmpwMDw
       TXT
 
-      expect(SumDuplicateItemPriorities.call(input)).to eq(157)
+      expect(SumGroupBadges.call(input)).to eq(70)
     end
   end
 end
