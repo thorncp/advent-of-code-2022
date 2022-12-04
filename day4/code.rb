@@ -9,6 +9,10 @@ class Pair
     left.cover?(right) || right.cover?(left)
   end
 
+  def overlap?
+    complete_overlap? || left.cover?(right.begin) || left.cover?(right.end)
+  end
+
   def left
     parse_range(parts.first)
   end
@@ -29,7 +33,7 @@ class Pair
   end
 end
 
-class CountOverlaps
+class CountCompleteOverlaps
   def self.call(input)
     input.each_line
       .map { |line| Pair.new(line) }
@@ -37,8 +41,18 @@ class CountOverlaps
   end
 end
 
+class CountPartialOverlaps
+  def self.call(input)
+    input.each_line
+      .map { |line| Pair.new(line) }
+      .count(&:overlap?)
+  end
+end
+
 if ARGV.any?
-  puts CountOverlaps.call(ARGF)
+  input = ARGF.read
+  puts "Complete overlap: #{CountCompleteOverlaps.call(input)}"
+  puts "Partial overlap: #{CountPartialOverlaps.call(input)}"
 else
   require "rspec/autorun"
 
@@ -73,9 +87,27 @@ else
         expect(pair).to_not be_complete_overlap
       end
     end
+
+    describe "#overlap?" do
+      it "returns true if the two ranges overlap at all" do
+        expect(Pair.new("5-7,7-9")).to be_overlap
+        expect(Pair.new("2-8,3-7")).to be_overlap
+        expect(Pair.new("6-6,4-6")).to be_overlap
+        expect(Pair.new("2-6,4-8")).to be_overlap
+        expect(Pair.new("7-9,5-7")).to be_overlap
+        expect(Pair.new("3-7,2-8")).to be_overlap
+        expect(Pair.new("4-6,6-6")).to be_overlap
+        expect(Pair.new("4-8,2-6")).to be_overlap
+      end
+
+      it "returns false if the two ranges do not overlap" do
+        pair = Pair.new("2-4,6-8")
+        expect(pair).to_not be_overlap
+      end
+    end
   end
 
-  RSpec.describe CountOverlaps do
+  RSpec.describe CountCompleteOverlaps do
     it "returns the number of pairs that overlap completely" do
       input = <<~TXT
         2-4,6-8
@@ -86,7 +118,22 @@ else
         2-6,4-8
       TXT
 
-      expect(CountOverlaps.call(input)).to eq 2
+      expect(CountCompleteOverlaps.call(input)).to eq 2
+    end
+  end
+
+  RSpec.describe CountPartialOverlaps do
+    it "returns the number of pairs that overlap partially" do
+      input = <<~TXT
+        2-4,6-8
+        2-3,4-5
+        5-7,7-9
+        2-8,3-7
+        6-6,4-6
+        2-6,4-8
+      TXT
+
+      expect(CountPartialOverlaps.call(input)).to eq 4
     end
   end
 end
