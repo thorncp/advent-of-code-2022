@@ -21,9 +21,8 @@ class ExecuteMoveOrder
     match = order.match(/move (?<count>\d+) from (?<source>\d+) to (?<destination>\d+)/)
     source = stacks[match[:source].to_i]
     destination = stacks[match[:destination].to_i]
-    match[:count].to_i.times do
-      destination.push(source.pop)
-    end
+    foo = source.pop(match[:count].to_i)
+    destination.push(*foo)
 
     stacks
   end
@@ -85,6 +84,20 @@ else
         3 => %w[P]
       )
     end
+
+    it "preserves the order of the crates" do
+      stacks = {
+        1 => %w[Z N D],
+        2 => %w[M C],
+        3 => %w[P]
+      }
+
+      expect(ExecuteMoveOrder.call(stacks: stacks, order: "move 3 from 1 to 3")).to eq(
+        1 => %w[],
+        2 => %w[M C],
+        3 => %w[P Z N D]
+      )
+    end
   end
 
   RSpec.describe UnloadCrates do
@@ -104,9 +117,9 @@ else
       updated_stacks = UnloadCrates.call(stacks: stacks, input: input)
 
       expect(updated_stacks).to eq(
-        1 => %w[C],
-        2 => %w[M],
-        3 => %w[P D N Z]
+        1 => %w[M],
+        2 => %w[C],
+        3 => %w[P Z N D]
       )
     end
   end
