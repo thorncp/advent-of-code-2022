@@ -49,6 +49,43 @@ class ParseTerminalHistory
   end
 end
 
+class FindSmallestDeleteableDirectory
+  attr_reader :tree, :disk_size, :size_to_delete, :target, :desired_free_size
+
+  def self.call(tree:, disk_size:, desired_free_size:)
+    new(tree: tree, disk_size: disk_size, desired_free_size: desired_free_size).call
+  end
+
+  def initialize(tree:, disk_size:, desired_free_size:)
+    @tree = tree
+    @disk_size = disk_size
+    @size_to_delete = desired_free_size - (disk_size - tree.size)
+    @target = nil
+  end
+
+  def call
+    asdf(tree)
+    target
+  end
+
+  private
+
+  def asdf(dir)
+    suitable_directories = dir.directories.select { |child| child.size >= size_to_delete }
+    potential_target = suitable_directories.min_by(&:size)
+
+    if potential_target
+      if target.nil? || potential_target.size < target.size
+        @target = potential_target
+      end
+    end
+
+    suitable_directories.each do |child|
+      asdf(child)
+    end
+  end
+end
+
 class Tree
   attr_reader :name, :files, :directories, :parent, :size
 
@@ -86,7 +123,14 @@ FileEntry = Struct.new(:name, :size, keyword_init: true)
 
 if ARGV.any?
   tree = ParseTerminalHistory.call(ARGF)
-  puts SumTargetDirectorySizes.call(tree: tree, size_cap: 100000)
+  part1 = SumTargetDirectorySizes.call(tree: tree, size_cap: 100000)
+  puts "Sum for part 1: #{part1}"
+  part2_dir = FindSmallestDeleteableDirectory.call(
+    tree: tree,
+    disk_size: 70000000,
+    desired_free_size: 30000000
+  )
+  puts "Dir to delete for part 2: #{part2_dir.name} (#{part2_dir.size})"
 else
   require "rspec/autorun"
 
@@ -210,6 +254,45 @@ else
 
         expect(tree["a"].name).to eq "a"
       end
+    end
+  end
+
+  RSpec.describe FindSmallestDeleteableDirectory do
+    it "finds the smallest directory that can be deleted" do
+      input = <<~TXT
+        $ cd /
+        $ ls
+        dir a
+        14848514 b.txt
+        8504156 c.dat
+        dir d
+        $ cd a
+        $ ls
+        dir e
+        29116 f
+        2557 g
+        62596 h.lst
+        $ cd e
+        $ ls
+        584 i
+        $ cd ..
+        $ cd ..
+        $ cd d
+        $ ls
+        4060174 j
+        8033020 d.log
+        5626152 d.ext
+        7214296 k
+      TXT
+      tree = ParseTerminalHistory.call(input)
+
+      dir = FindSmallestDeleteableDirectory.call(
+        tree: tree,
+        disk_size: 70000000,
+        desired_free_size: 30000000
+      )
+
+      expect(dir.name).to eq "d"
     end
   end
 end
